@@ -25,6 +25,7 @@ class _FileReaderMixin(abc.ABC):
     def _act(self) -> str:
         ...
 
+
 class BaseEncoder(_FileReaderMixin):
     def _act(self) -> str:
         return self.encode()
