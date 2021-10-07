@@ -1,4 +1,4 @@
 from . import cli
 
 
-cli.main()
+cli.main(obj={})

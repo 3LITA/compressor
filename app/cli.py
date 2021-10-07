@@ -6,44 +6,33 @@ from . import compressors
 
 
 @click.group(name='compressor')
-def main() -> None:
-    pass
+@click.argument('filepath', type=click.Path(exists=True))
+@click.option('--algorithm', '-a', type=str, default='huffman')
+@click.pass_context
+def main(context: click.Context, filepath: pathlib.Path, algorithm: str) -> None:
+    context.obj = dict(
+        filepath=filepath,
+        algorithm=algorithm,
+    )
 
 
 @main.command()
-@click.argument('filepath', type=click.Path(exists=True))
-@click.option('--algorithm', '-a', 'algorithm', type=str, default='huffman', help="Encoding algorithm")
-def encode_file(filepath: pathlib.Path, algorithm: str) -> None:
+@click.pass_context
+def encode(context: click.Context) -> None:
+    algorithm = context.obj['algorithm']
+    filepath = context.obj['filepath']
+
     Encoder = compressors.ENCODERS[algorithm]
     encoder = Encoder.from_file(filepath)
     encoder.to_file(pathlib.Path(f'{filepath}.huff'))
 
 
 @main.command()
-@click.argument('source', type=str)
-@click.option('--algorithm', '-a', 'algorithm', type=str, default='huffman', help="Encoding algorithm")
-def encode_string(source: str, algorithm: str) -> None:
-    Encoder = compressors.ENCODERS[algorithm]
-    encoder = Encoder(text=source)
-    print(encoder.encode())
+@click.pass_context
+def decode(context: click.Context) -> None:
+    algorithm = context.obj['algorithm']
+    filepath = context.obj['filepath']
 
-
-@main.command()
-@click.argument('filepath', type=click.Path(exists=True))
-@click.option(
-    '--algorithm',
-    '-a', 'algorithm', type=str, default='huffman', help="Encoding algorithm"
-)
-def decode_file(filepath: pathlib.Path, algorithm: str) -> None:
     Decoder = compressors.DECODERS[algorithm]
     decoder = Decoder.from_file(filepath)
     decoder.to_file(pathlib.Path(f'{filepath}.decoded'))
-
-
-@main.command()
-@click.argument('encoded', type=str)
-@click.option('--algorithm', '-a', 'algorithm', type=str, default='huffman', help="Encoding algorithm")
-def decode_string(encoded: str, algorithm: str) -> None:
-    Decoder = compressors.DECODERS[algorithm]
-    decoder = Decoder(text=encoded)
-    print(decoder.decode())
