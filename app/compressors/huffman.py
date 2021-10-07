@@ -1,28 +1,19 @@
 import collections
-import sys
 import typing
 
+from . import _base
 
+
+ALGORITHM_NAME = 'huffman'
 MAP_TEXT_SPLITTER = '__'
 MAP_ITEMS_SPLITTER = '||'
 KEY_VALUE_SPLITTER = '::'
 
 
-class Encoder:
-    def __init__(self, text: str) -> None:
-        self._text = text
-        self._letters_map: dict[str, str] = {}
+class Encoder(_base.BaseEncoder):
+    algorithm = ALGORITHM_NAME
 
-    @classmethod
-    def from_filepath(cls, filepath: str) -> 'Encoder':
-        with open(filepath, 'r') as input_file:
-            text = input_file.read()
-        return Encoder(text=text)
-
-    def encode_to_filepath(self, filepath: str) -> None:
-        encoded = self.encode()
-        with open(filepath, 'w') as output_file:
-            output_file.write(encoded)
+    _letters_map: dict[str, str] = {}
 
     def encode(self) -> str:
         self._construct_letters_map()
@@ -76,20 +67,8 @@ class Encoder:
         return sorted(letter_probabilites, key=lambda i: letter_probabilites[i])[:2]
 
 
-class Decoder:
-    def __init__(self, text: str) -> None:
-        self._text = text
-
-    @classmethod
-    def from_filepath(cls, filepath: str) -> 'Decoder':
-        with open(filepath, 'r') as encoded_file:
-            text = encoded_file.read()
-        return cls(text=text)
-
-    def decode_to_filepath(self, filepath: str) -> None:
-        decoded_text = self.decode()
-        with open(filepath, 'w') as output_file:
-            output_file.write(decoded_text)
+class Decoder(_base.BaseDecoder):
+    algorithm = ALGORITHM_NAME
 
     def decode(self) -> str:
         serialized_map, encoded_text = self._text.split(MAP_TEXT_SPLITTER)
@@ -110,19 +89,3 @@ class Decoder:
             code = ''
 
         return decoded_text
-
-
-def main() -> None:
-    action = sys.argv[1]
-    filepath = sys.argv[2]
-
-    if action == 'e':
-        encoder = Encoder.from_filepath(filepath=filepath)
-        encoder.encode_to_filepath(filepath=f'{filepath}.huff')
-    elif action == 'd':
-        decoder = Decoder.from_filepath(filepath=filepath)
-        decoder.decode_to_filepath(filepath=f'{filepath}.decoded')
-
-
-if __name__ == '__main__':
-    main()
