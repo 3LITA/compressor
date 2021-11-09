@@ -2,7 +2,7 @@ import pathlib
 
 import click
 
-from . import compressors
+from . import coders
 
 
 @click.group(name='compressor')
@@ -22,9 +22,9 @@ def encode(context: click.Context) -> None:
     algorithm = context.obj['algorithm']
     filepath = context.obj['filepath']
 
-    Encoder = compressors.ENCODERS[algorithm]
+    Encoder = coders.ENCODERS[algorithm]
     encoder = Encoder.from_file(filepath)
-    encoder.to_file(pathlib.Path(f'{filepath}.huff'))
+    encoder.to_file(pathlib.Path(f'{filepath}.{algorithm}'))
 
 
 @main.command()
@@ -33,6 +33,6 @@ def decode(context: click.Context) -> None:
     algorithm = context.obj['algorithm']
     filepath = context.obj['filepath']
 
-    Decoder = compressors.DECODERS[algorithm]
+    Decoder = coders.DECODERS[algorithm]
     decoder = Decoder.from_file(filepath)
     decoder.to_file(pathlib.Path(f'{filepath}.decoded'))

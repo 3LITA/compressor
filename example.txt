@@ -1,5 +1,0 @@
-There is some text to be encoded first, then decoded
-And this all for no reason, just to test the so called "compressor"
-Probably it will not even "compress" anything, since this file is too small
-Anyway I will rewrite the whole algorithm in Rust, so it'll be faster and more optimized
-Ok. I think it's enough letters in this text

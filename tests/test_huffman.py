@@ -1,4 +1,4 @@
-from app.compressors import huffman
+from compress.coders import huffman
 
 
 def test_build_codes():

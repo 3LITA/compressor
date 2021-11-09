@@ -1,30 +1,86 @@
+import abc
 import collections
+import pathlib
 import typing
 
-from . import _base
+
+class _FileReaderMixin(abc.ABC):
+    _PREPROCESSORS: tuple[typing.Callable[[str], str], ...] = tuple()
+    _POSTPROCESSORS: tuple[typing.Callable[[str], str], ...] = tuple()
+
+    @property
+    @abc.abstractmethod
+    def algorithm(self) -> str:
+        ...
+
+    def __init__(self, text: str) -> None:
+        self._text = text
+
+    @classmethod
+    def from_file(cls, filepath: pathlib.Path) -> '_FileReaderMixin':
+        with open(filepath, 'r') as source_file:
+            text = source_file.read()
+            text = cls._preprocess(text=text)
+        return cls(text=text)
+
+    @classmethod
+    def _preprocess(cls, text: str) -> str:
+        for preprocessor in cls._PREPROCESSORS:
+            text = preprocessor(text)
+        return text
+
+    def to_file(self, filepath: pathlib.Path) -> None:
+        with open(filepath, 'w') as output_file:
+            output_file.write(self._postprocess(self._act()))
+
+    @classmethod
+    def _postprocess(cls, text: str) -> str:
+        for postprocessor in cls._POSTPROCESSORS:
+            text = postprocessor(text)
+        return text
+
+    @abc.abstractmethod
+    def _act(self) -> str:
+        ...
 
 
-ALGORITHM_NAME = 'huffman'
-MAP_TEXT_SPLITTER = '__'
-MAP_ITEMS_SPLITTER = '||'
-KEY_VALUE_SPLITTER = '::'
+class BaseEncoder(_FileReaderMixin):
+    def _act(self) -> str:
+        return self.encode()
+
+    @abc.abstractmethod
+    def encode(self) -> str:
+        ...
 
 
-class Encoder(_base.BaseEncoder):
-    algorithm = ALGORITHM_NAME
+class BaseDecoder(_FileReaderMixin):
+    def _act(self) -> str:
+        return self.decode()
 
+    @abc.abstractmethod
+    def decode(self) -> str:
+        ...
+
+
+class HuffmanAlgorithm:
+    MAP_TEXT_SPLITTER = '__'
+    MAP_ITEMS_SPLITTER = '||'
+    KEY_VALUE_SPLITTER = '::'
+
+
+class HuffmanEncoder(BaseEncoder, HuffmanAlgorithm):
     _letters_map: dict[str, str] = {}
 
     def encode(self) -> str:
         self._construct_letters_map()
         serialized_map = self._serialize_letters_map()
         encoded = ''.join([self._letters_map[letter] for letter in self._text])
-        return f'{serialized_map}{MAP_TEXT_SPLITTER}{encoded}'
+        return f'{serialized_map}{self.MAP_TEXT_SPLITTER}{encoded}'
 
     def _serialize_letters_map(self) -> str:
-        return MAP_ITEMS_SPLITTER.join(
+        return self.MAP_ITEMS_SPLITTER.join(
             [
-                f'{letter}{KEY_VALUE_SPLITTER}{code}'
+                f'{letter}{self.KEY_VALUE_SPLITTER}{code}'
                 for letter, code in self._letters_map.items()
             ]
         )
@@ -67,15 +123,13 @@ class Encoder(_base.BaseEncoder):
         return sorted(letter_probabilites, key=lambda i: letter_probabilites[i])[:2]
 
 
-class Decoder(_base.BaseDecoder):
-    algorithm = ALGORITHM_NAME
-
+class HuffmanDecoder(BaseDecoder, HuffmanAlgorithm):
     def decode(self) -> str:
-        serialized_map, encoded_text = self._text.split(MAP_TEXT_SPLITTER)
+        serialized_map, encoded_text = self._text.split(self.MAP_TEXT_SPLITTER)
 
         codes_map: dict[str, str] = {}
-        for map_item in serialized_map.split(MAP_ITEMS_SPLITTER):
-            letter, code = map_item.split(KEY_VALUE_SPLITTER)
+        for map_item in serialized_map.split(self.MAP_ITEMS_SPLITTER):
+            letter, code = map_item.split(self.KEY_VALUE_SPLITTER)
             codes_map[code] = letter
 
         decoded_text = ''
