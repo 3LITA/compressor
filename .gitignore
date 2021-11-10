@@ -8,6 +8,7 @@
 # folders
 __pycache__
 files
+scripts
 
 # file types
 *.pyc

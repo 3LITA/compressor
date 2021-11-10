@@ -2,37 +2,50 @@ import pathlib
 
 import click
 
-from . import coders
+from . import compressors
 
 
 @click.group(name='compressor')
-@click.argument('filepath', type=click.Path(exists=True))
+@click.argument('input-filepath', type=click.Path(exists=True))
+@click.argument('output-filepath', type=click.Path())
 @click.option('--algorithm', '-a', type=str, default='huffman')
 @click.pass_context
-def main(context: click.Context, filepath: pathlib.Path, algorithm: str) -> None:
+def main(
+    context: click.Context,
+    input_filepath: pathlib.Path,
+    output_filepath: pathlib.Path,
+    algorithm: str,
+) -> None:
     context.obj = dict(
-        filepath=filepath,
+        input_filepath=input_filepath,
+        output_filepath=output_filepath,
         algorithm=algorithm,
     )
 
 
 @main.command()
 @click.pass_context
-def encode(context: click.Context) -> None:
+def compress(context: click.Context) -> None:
     algorithm = context.obj['algorithm']
-    filepath = context.obj['filepath']
+    input_filepath = context.obj['input_filepath']
+    output_filepath = context.obj['output_filepath']
 
-    Encoder = coders.ENCODERS[algorithm]
-    encoder = Encoder.from_file(filepath)
-    encoder.to_file(pathlib.Path(f'{filepath}.{algorithm}'))
+    Compressor = compressors.COMPRESSORS[algorithm]
+    compressor = Compressor(
+        input_filepath=input_filepath, output_filepath=output_filepath
+    )
+    compressor.compress()
 
 
 @main.command()
 @click.pass_context
-def decode(context: click.Context) -> None:
+def decompress(context: click.Context) -> None:
     algorithm = context.obj['algorithm']
-    filepath = context.obj['filepath']
+    input_filepath = context.obj['input_filepath']
+    output_filepath = context.obj['output_filepath']
 
-    Decoder = coders.DECODERS[algorithm]
-    decoder = Decoder.from_file(filepath)
-    decoder.to_file(pathlib.Path(f'{filepath}.decoded'))
+    Decomressor = compressors.DECOMPRESSORS[algorithm]
+    decompressor = Decomressor(
+        input_filepath=input_filepath, output_filepath=output_filepath
+    )
+    decompressor.decompress()

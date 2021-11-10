@@ -1,0 +1,6 @@
+# constants
+BYTE_LENGTH = 8
+
+# custom
+ALPHABET_LENGTH = 257
+EOF_CHAR = 256

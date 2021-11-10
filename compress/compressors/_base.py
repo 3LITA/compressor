@@ -4,6 +4,26 @@ import pathlib
 import typing
 
 
+class _BaseAlgorithm:
+    def __init__(
+        self, input_filepath: pathlib.Path, output_filepath: pathlib.Path
+    ) -> None:
+        self._input_filepath = input_filepath
+        self._output_filepath = output_filepath
+
+
+class BaseCompressor(_BaseAlgorithm, abc.ABC):
+    @abc.abstractmethod
+    def compress(self) -> None:
+        ...
+
+
+class BaseDecompressor(_BaseAlgorithm, abc.ABC):
+    @abc.abstractmethod
+    def decompress(self) -> None:
+        ...
+
+
 class _FileReaderMixin(abc.ABC):
     _PREPROCESSORS: tuple[typing.Callable[[str], str], ...] = tuple()
     _POSTPROCESSORS: tuple[typing.Callable[[str], str], ...] = tuple()
