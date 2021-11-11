@@ -4,8 +4,10 @@ import typing
 
 def char_input_stream(filepath: pathlib.Path) -> typing.Iterator[int]:
     with open(filepath, 'rb') as input_stream:
-        while byte := input_stream.read(1):
+        byte = input_stream.read(1)
+        while byte:
             yield byte[0]
+            byte = input_stream.read(1)
 
 
 class BitInputStream:
@@ -40,8 +42,10 @@ class BitInputStream:
         return (self._current_byte >> self._bits_remaining) & 1
 
     def read_no_eof(self) -> typing.Iterator[int]:
-        while (result := self.read()) != -1:
+        result = self.read()
+        while result != -1:
             yield result
+            result = self.read()
         raise EOFError
 
 

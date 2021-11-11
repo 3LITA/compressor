@@ -1,30 +1,21 @@
-import string
+import typing
+
+from compress import config
 
 
-ASCII = string.ascii_letters + string.digits + string.punctuation + string.whitespace
+def transform(source: typing.List[int]) -> typing.Iterator[int]:
+    alphabet = list(range(config.ALPHABET_LENGTH))
 
-
-def transform(source: str) -> str:
-    alphabet = ASCII
-
-    result = ''
     for char in source:
         index = alphabet.index(char)
-        result += f'{index:03d}'
-        # TODO: maybe some functool for here?
-        alphabet = char + alphabet[:index] + alphabet[index + 1 :]
-
-    return result
+        alphabet.insert(0, alphabet.pop(index))
+        yield index
 
 
-def restore(transformed: str) -> str:
-    alphabet = ASCII
+def restore(transformed: typing.Iterator[int]) -> typing.Iterator[int]:
+    alphabet = list(range(config.ALPHABET_LENGTH))
 
-    restored = ''
-    for i in range(0, len(transformed), 3):
-        index = int(transformed[i : i + 3])
+    for index in transformed:
         char = alphabet[index]
-        restored += char
-        alphabet = alphabet[index] + alphabet[:index] + alphabet[index + 1 :]
-
-    return restored
+        alphabet.insert(0, alphabet.pop(index))
+        yield char

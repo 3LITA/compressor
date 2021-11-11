@@ -33,7 +33,7 @@ def compress(context: click.Context) -> None:
     Compressor = compressors.COMPRESSORS[algorithm]
     compressor = Compressor(
         input_filepath=input_filepath, output_filepath=output_filepath
-    )
+    )  # type: ignore
     compressor.compress()
 
 
@@ -47,5 +47,5 @@ def decompress(context: click.Context) -> None:
     Decomressor = compressors.DECOMPRESSORS[algorithm]
     decompressor = Decomressor(
         input_filepath=input_filepath, output_filepath=output_filepath
-    )
+    )  # type: ignore
     decompressor.decompress()

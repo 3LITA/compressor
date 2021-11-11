@@ -1,81 +1,96 @@
 import collections
-import dataclasses
+import functools
 import typing
 
-
-@dataclasses.dataclass
-class Transformation:
-    last_column: str
-    index: int
-
-    def dump(self) -> str:
-        index = f'{self.index:8d}'
-        assert len(index) <= 8, "Index overflow!"
-        return f'{index}{self.last_column}'
-
-    @classmethod
-    def load(cls, raw: str) -> 'Transformation':
-        index = int(raw[:8])
-        return cls(index=index, last_column=raw[8:])
+from compress import config
 
 
-def transform(source: str) -> str:
-    rotations = sorted(_generate_rotations(source=source))
-    index = rotations.index(source)
-    bwt = _construct_last_column(rotations)
-    return Transformation(last_column=bwt, index=index).dump()
+class BurrowsWheelerTransformer:
+    def __init__(self, block: typing.List[int]) -> None:
+        self._block = block + [config.END_OF_BLOCK_CHAR]
+
+    def transform(self) -> typing.List[int]:
+        indices = list(range(len(self._block)))
+        indices.sort(key=functools.cmp_to_key(self._compare))
+        last_column = self._construct_last_column(indices=indices)
+        return last_column
+
+    def _compare(self, x: int, y: int) -> int:
+        # TODO: remove this duplication
+        return self._compare_by_x(x=x, y=y) if x > y else self._compare_by_y(x=x, y=y)
+
+    def _compare_by_x(self, x: int, y: int) -> int:
+        while self._block[x] == self._block[y] and x < len(self._block):
+            x += 1
+            y += 1
+
+        if self._block[x] == self._block[y]:
+            return 0
+        return -1 if self._block[x] < self._block[y] else 1
+
+    def _compare_by_y(self, x: int, y: int) -> int:
+        while self._block[x] == self._block[y] and y < len(self._block):
+            x = x + 1
+            y = y + 1
+
+        if self._block[x] == self._block[y]:
+            return 0
+        return -1 if self._block[x] < self._block[y] else 1
+
+    def _construct_last_column(self, indices: typing.List[int]) -> typing.List[int]:
+        return [self._block[ix - 1] for ix in indices]
 
 
-def _generate_rotations(source: str) -> typing.Iterator[str]:
-    for i in range(len(source)):
-        yield f'{source[i:]}{source[:i]}'
+class BurrowsWheelerRestorer:
+    def __init__(self, last_column: typing.List[int]) -> None:
+        self._last_column = last_column
 
+    def restore(self) -> typing.List[int]:
+        last_first_map = self._build_last_first_map()
+        target_shift_index = self._last_column.index(config.END_OF_BLOCK_CHAR)
+        return self._restore_by_last_first_map(
+            index=target_shift_index,
+            last_first_map=last_first_map,
+        )
 
-def _construct_last_column(rotations: list[str]) -> str:
-    return ''.join(rotation[-1] for rotation in rotations)
+    def _build_last_first_map(
+        self,
+    ) -> typing.Dict[typing.Tuple[int, int], typing.Tuple[int, int]]:
+        first_column = sorted(self._last_column)
 
+        enumerated_first_column = self._enumerate_letters_in_column(column=first_column)
+        enumerated_last_column = self._enumerate_letters_in_column(
+            column=self._last_column
+        )
 
-def restore(raw_transformation: str) -> str:
-    transformation = Transformation.load(raw_transformation)
-    last_first_map = _build_last_first_map(transformation.last_column)
-    return _restore_by_last_first_map(
-        index=transformation.index,
-        last_first_map=last_first_map,
-    )
+        return {
+            char: enumerated_first_column[i]
+            for i, char in enumerate(enumerated_last_column)
+        }
 
+    @staticmethod
+    def _enumerate_letters_in_column(
+        column: typing.Iterable[int],
+    ) -> typing.List[typing.Tuple[int, int]]:
+        enumerated_letters = []
 
-def _build_last_first_map(last_column: str) -> dict[tuple[str, int], tuple[str, int]]:
-    first_column = sorted(last_column)
+        counter: typing.Counter[int] = collections.Counter()
+        for char in column:
+            counter[char] += 1
+            enumerated_letters.append((char, counter[char]))
 
-    enumerated_first_column = _enumerate_letters_in_column(column=first_column)
-    enumerated_last_column = _enumerate_letters_in_column(column=last_column)
+        return enumerated_letters
 
-    return {
-        letter_number: enumerated_first_column[i]
-        for i, letter_number in enumerate(enumerated_last_column)
-    }
+    @staticmethod
+    def _restore_by_last_first_map(
+        index: int,
+        last_first_map: typing.Dict[typing.Tuple[int, int], typing.Tuple[int, int]],
+    ) -> typing.List[int]:
+        char = tuple(last_first_map.keys())[index]  # dict preserves insert order
 
+        chars = []
+        while last_first_map:
+            char = last_first_map.pop(char)
+            chars.append(char[0])
 
-def _enumerate_letters_in_column(column: typing.Iterable[str]) -> list[tuple[str, int]]:
-    enumerated_letters = []
-
-    counter: typing.Counter[str] = collections.Counter()
-    for letter in column:
-        counter[letter] += 1
-        enumerated_letters.append((letter, counter[letter]))
-
-    return enumerated_letters
-
-
-def _restore_by_last_first_map(
-    index: int,
-    last_first_map: dict[tuple[str, int], tuple[str, int]],
-) -> str:
-    letter = tuple(last_first_map.keys())[index]  # dict preserves insert order
-
-    letters = []
-    while last_first_map:
-        letter = last_first_map.pop(letter)
-        letters.append(letter[0])
-
-    return ''.join(letters)
+        return chars

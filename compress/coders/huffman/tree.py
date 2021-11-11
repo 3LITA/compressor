@@ -3,7 +3,7 @@ import heapq
 import pathlib
 import typing
 
-from compress import config, helpers
+from compress import config, streamers
 
 
 class Node:
@@ -28,13 +28,15 @@ class Leaf(Node):
 
 
 class CodeTree:
-    def __init__(self, root: Node, codes: dict[int, tuple[int, ...]]) -> None:
+    def __init__(
+        self, root: Node, codes: typing.Dict[int, typing.Tuple[int, ...]]
+    ) -> None:
         self.root = root
         self.codes = codes
 
     @classmethod
     def from_root(cls, root: Node) -> 'CodeTree':
-        def build_code_list(node: Node, prefix: tuple[int, ...]) -> None:
+        def build_code_list(node: Node, prefix: typing.Tuple[int, ...]) -> None:
             if isinstance(node, InternalNode):
                 build_code_list(node.left, prefix + (0,))
                 build_code_list(node.right, prefix + (1,))
@@ -46,19 +48,26 @@ class CodeTree:
                 return
             raise TypeError("Illegal node type")
 
-        codes: dict[int, tuple[int, ...]] = {}
+        codes: typing.Dict[int, typing.Tuple[int, ...]] = {}
         build_code_list(node=root, prefix=tuple())
 
         return cls(root=root, codes=codes)
 
     @classmethod
     def from_filepath(cls, filepath: pathlib.Path) -> 'CodeTree':
-        frequencies = collections.Counter(helpers.char_input_stream(filepath=filepath))
-        frequencies[config.EOF_CHAR] += 1
+        frequencies = collections.Counter(
+            streamers.char_input_stream(filepath=filepath)
+        )
+        return cls.from_frequencies(frequencies=frequencies)
+
+    @classmethod
+    def from_chars(cls, chars: typing.Iterable[int]) -> 'CodeTree':
+        frequencies = collections.Counter(chars)
         return cls.from_frequencies(frequencies=frequencies)
 
     @classmethod
     def from_frequencies(cls, frequencies: typing.Counter[int]) -> 'CodeTree':
+        frequencies[config.EOF_CHAR] += 1
         pqueue: list[tuple[int, int, Node]] = []
 
         for char, frequency in frequencies.items():
@@ -81,7 +90,8 @@ class CodeTree:
 
     @staticmethod
     def _fill_up_to_2(
-        pqueue: list[tuple[int, int, Node]], exclude_chars: list[int]
+        pqueue: typing.List[typing.Tuple[int, int, Node]],
+        exclude_chars: typing.List[int],
     ) -> None:
         for char in range(config.ALPHABET_LENGTH):
             if char not in exclude_chars:
@@ -91,7 +101,7 @@ class CodeTree:
 
 
 class CanonicalCode:
-    def __init__(self, code_lengths: list[int]) -> None:
+    def __init__(self, code_lengths: typing.List[int]) -> None:
         self.code_lengths = code_lengths
 
     @classmethod
@@ -114,7 +124,7 @@ class CanonicalCode:
 
     # TODO: maybe make this method CodeTree.canonize
     def to_code_tree(self) -> CodeTree:
-        nodes: list[Node] = []
+        nodes: typing.List[Node] = []
 
         for i in range(max(self.code_lengths), -1, -1):
             assert len(nodes) % 2 == 0

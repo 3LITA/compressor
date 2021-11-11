@@ -1,14 +1,14 @@
-from . import huffman
+from . import burrows_wheeler, huffman
 
 
 COMPRESSORS = {
-    # burrows_wheeler.Encoder.algorithm: burrows_wheeler.Encoder,
-    huffman.Compressor.algorithm: huffman.Compressor,
+    burrows_wheeler.ALGORITHM_NAME: burrows_wheeler.Compressor,
+    huffman.ALGORITHM_NAME: huffman.Compressor,
 }
 
 DECOMPRESSORS = {
-    # burrows_wheeler.Decoder.algorithm: burrows_wheeler.Decoder,
-    huffman.Decompressor.algorithm: huffman.Decompressor,
+    burrows_wheeler.ALGORITHM_NAME: burrows_wheeler.Decompressor,
+    huffman.ALGORITHM_NAME: huffman.Decompressor,
 }
 
 __all__ = ['COMPRESSORS', 'DECOMPRESSORS']

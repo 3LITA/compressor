@@ -1,6 +1,6 @@
 import pathlib
 
-from compress import helpers
+from compress import streamers
 from compress.coders import huffman
 
 from . import _base
@@ -19,12 +19,12 @@ class Compressor(_base.BaseCompressor):
         self._encoder = huffman.Encoder.from_filepath(filepath=input_filepath)
 
     def compress(self) -> None:
-        with helpers.BitOutputStream(
+        with streamers.BitOutputStream(
             output_filename=self._output_filepath
         ) as output_stream:
             for bit in self._encoder.header:
                 output_stream.write(bit=bit)
-            input_stream = helpers.char_input_stream(filepath=self._input_filepath)
+            input_stream = streamers.char_input_stream(filepath=self._input_filepath)
             for bits in self._encoder.encode(stream=input_stream):
                 for bit in bits:
                     output_stream.write(bit=bit)
@@ -40,7 +40,7 @@ class Decompressor(_base.BaseDecompressor):
         self._decoder = huffman.Decoder.from_filepath(filepath=input_filepath)
 
     def decompress(self) -> None:
-        with helpers.BitInputStream(
+        with streamers.BitInputStream(
             input_filename=self._input_filepath
         ) as input_stream:
             with open(self._output_filepath, 'wb') as output_stream:

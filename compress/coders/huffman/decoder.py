@@ -1,7 +1,7 @@
 import pathlib
 import typing
 
-from compress import config, helpers
+from compress import config, streamers
 
 from ..base import BaseDecoder
 from . import tree
@@ -19,14 +19,14 @@ class Decoder(BaseDecoder):
         return cls(code_tree=code_tree)
 
     @staticmethod
-    def _read_header(filepath: pathlib.Path) -> list[int]:
+    def _read_header(filepath: pathlib.Path) -> typing.List[int]:
         def read_int(n: int) -> int:
             result = 0
             for _ in range(n):
                 result = (result << 1) | next(input_stream.read_no_eof())
             return result
 
-        with helpers.BitInputStream(input_filename=filepath) as input_stream:
+        with streamers.BitInputStream(input_filename=filepath) as input_stream:
             return [read_int(config.BYTE_LENGTH) for _ in range(config.ALPHABET_LENGTH)]
 
     def decode(self, stream: typing.Iterator[int]) -> typing.Iterator[int]:

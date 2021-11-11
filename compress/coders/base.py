@@ -4,7 +4,9 @@ import typing
 
 class BaseEncoder(abc.ABC):
     @abc.abstractmethod
-    def encode(self, stream: typing.Iterator[int]) -> typing.Iterator[tuple[int, ...]]:
+    def encode(
+        self, stream: typing.Iterator[int]
+    ) -> typing.Iterator[typing.Tuple[int, ...]]:
         ...
 
 
