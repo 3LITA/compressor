@@ -1,6 +1,6 @@
 import itertools
 
-from compress.coders.huffman import CodeTree
+from compression.coders.huffman import CodeTree
 
 
 def test_building_codes_with_code_tree():

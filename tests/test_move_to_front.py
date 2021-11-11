@@ -1,4 +1,4 @@
-from compress.processors import move_to_front
+from compression.processors import move_to_front
 
 
 # def test_move_to_front():

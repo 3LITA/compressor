@@ -2,7 +2,7 @@ import itertools
 import pathlib
 import typing
 
-from compress import config
+from compression import config
 
 from ..base import BaseEncoder
 from . import tree

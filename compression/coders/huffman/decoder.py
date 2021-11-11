@@ -1,7 +1,7 @@
 import pathlib
 import typing
 
-from compress import config, streamers
+from compression import config, streamers
 
 from ..base import BaseDecoder
 from . import tree

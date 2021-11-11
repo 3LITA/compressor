@@ -1,6 +1,6 @@
 import pytest
 
-from compress.processors import burrows_wheeler
+from compression.processors import burrows_wheeler
 
 
 @pytest.mark.parametrize(

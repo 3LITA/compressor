@@ -3,7 +3,7 @@ import heapq
 import pathlib
 import typing
 
-from compress import config, streamers
+from compression import config, streamers
 
 
 class Node:

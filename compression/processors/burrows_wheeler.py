@@ -2,7 +2,7 @@ import collections
 import functools
 import typing
 
-from compress import config
+from compression import config
 
 
 class BurrowsWheelerTransformer:

@@ -1,6 +1,6 @@
 import typing
 
-from compress import config
+from compression import config
 
 
 def transform(source: typing.List[int]) -> typing.Iterator[int]:
